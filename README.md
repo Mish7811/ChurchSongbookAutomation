@@ -120,26 +120,34 @@ cd frontend
 - start dev server
 (Refer to frontend/README.md for UI-specific instructions.)
 
-🔮 Future Improvements
+---
+
+## 🔮 Future Improvements
 
 - Role-based access for team members
 - Validation & duplicate song detection
 - Auto-export to Slides / PDF
 - Admin dashboard for monthly progress tracking
 
-### 🤝 Contribution Guidelines
+---
+
+## 🤝 Contribution Guidelines
 - Keep backend logic week-agnostic
 - Avoid hardcoding month/week values
 - Follow clear naming for week identifiers
 - Write changes with parallel execution in mind
 
-### 📌 Note
+---
+
+## 📌 Note
 This system is purpose-built for church songbook preparation workflows and prioritizes:
 - Reliability
 - Team coordination
 - Low operational friction
 
-🧑‍💻 Author
+---
+
+# 🧑‍💻 Author
 
 Built with real-world church workflow constraints in mind.
 Designed to scale without burning out volunteers 🙌
