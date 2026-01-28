@@ -42,6 +42,8 @@ This revamped version shifts from weekly automation to a **monthly batch workflo
 ---
 
 ## 🏗️ Project Structure
+
+```text
 songbook-automation/
 │
 ├── frontend/
@@ -54,6 +56,7 @@ songbook-automation/
 │ └── README.md
 │
 └── README.md
+```
 ---
 
 ## ⚙️ Tech Stack
