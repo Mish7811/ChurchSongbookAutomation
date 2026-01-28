@@ -38,6 +38,7 @@ SLOT_SLIDES_MAP = {
 # Google Sheets configuration
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 SHEET_NAME = os.environ.get("SHEET_NAME", "Feb")  # Default to "Feb"
+BATCH_SIZE = 15
 
 # Validate configuration
 for slot, slides_id in SLOT_SLIDES_MAP.items():
@@ -153,6 +154,9 @@ async def get_songs(slot: str):
                     "slot": assigned_slot,
                     "rowIndex": i + 1  # 1-indexed for Google Sheets
                 })
+                # 🔑 STOP after 15 songs
+                if len(songs) >= BATCH_SIZE:
+                    break
         
         return {
             "success": True,
