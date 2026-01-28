@@ -116,8 +116,8 @@ Run the backend service as per the project configuration.
 ### Frontend Setup
 
 cd frontend
-# install dependencies
-# start dev server
+- install dependencies
+- start dev server
 (Refer to frontend/README.md for UI-specific instructions.)
 
 🔮 Future Improvements
