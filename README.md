@@ -7,7 +7,6 @@
 [![Frontend](https://img.shields.io/badge/frontend-React%20%2B%20TypeScript-61DAFB)]()
 [![License](https://img.shields.io/badge/license-MIT-blue)]()
 
-**Live Demo:** [https://your-app.vercel.app](https://your-app.vercel.app) *(Private - Contact for access)*
 
 ---
 
@@ -31,7 +30,7 @@
 ## 🎯 The Problem
 
 **Before this system:**
-- ⏰ **6-9 hours/week** manually copying songs to slides
+- ⏰ **2-5 hours/week** manually copying songs to slides
 - 😓 **Error-prone** copy/paste mistakes
 - 🔄 **Duplicate work** across 3 church services
 - 📝 **Lost tracking** of which songs were processed
@@ -44,7 +43,7 @@
 ## ✨ The Solution
 
 An intelligent automation system that:
-- ⚡ **Reduces 8 hours to 15 minutes** per songbook
+- ⚡ **Reduces 5 hours to 15 minutes** per songbook
 - 🎯 **Zero errors** - no more copy/paste mistakes
 - 👥 **Parallel processing** - 3 team members work simultaneously
 - 📊 **Automatic tracking** - system knows what's done vs pending
@@ -359,7 +358,7 @@ Visit `http://localhost:5173` 🎉
 ## 📊 Project Statistics
 
 **Efficiency Gains:**
-- ⏱️ **Time saved:** ~8 hours → 45 minutes per week (90% reduction)
+- ⏱️ **Time saved:** ~6 hours → 45 minutes per week (90% reduction)
 - 👥 **Scalability:** Handles 60+ songs/month easily
 - 🎯 **Accuracy:** 0% error rate (vs ~5% manual errors)
 - 💰 **Cost:** $0/month operational costs
@@ -402,7 +401,7 @@ git push origin feature/your-feature
 
 **Private Internal Use**
 
-This software is proprietary and intended solely for internal use by [Your Church Name]. Redistribution, modification, or use outside of authorized church operations is not permitted without explicit permission.
+This software is proprietary and intended solely for internal use by The Apostolic Church of India - ACI. Redistribution, modification, or use outside of authorized church operations is not permitted without explicit permission.
 
 ---
 
@@ -422,12 +421,7 @@ This software is proprietary and intended solely for internal use by [Your Churc
 ## 📞 Support
 
 **For Issues:**
-- Check [GitHub Issues](https://github.com/yourusername/repo/issues)
-- Contact: your-email@church.org
-
-**For Questions:**
-- Slack: #songbook-automation
-- Email: tech-team@church.org
+- Contact: mishalreueld25@gmail.com
 
 ---
 
@@ -453,7 +447,7 @@ This software is proprietary and intended solely for internal use by [Your Churc
 ## 💡 FAQ
 
 **Q: Why only 3 slots?**  
-A: Based on church needs - 3 services/week typically. System is easily expandable to more slots if needed.
+A: Based on church needs - 3 volunteers typically. System is easily expandable to more slots if needed.
 
 **Q: What happens if someone updates the wrong slot?**  
 A: Google Sheets version history allows reverting. Each slot is isolated, so mistakes don't affect other weeks.
