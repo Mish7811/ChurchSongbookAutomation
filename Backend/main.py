@@ -187,14 +187,19 @@ def get_weekly_metadata():
         rows = worksheet.get_all_records()
 
         for row in rows:
-            if int(row["Week"]) == week_number:
+            try:
+                row_week = int(str(row["Week"]).strip())
+            
+                if row_week == week_number:
 
-                metadata["BN_offering"] = row["Bharath Nagar"]
-                metadata["MN_offering"] = row["Mannurpet"]
-                metadata["PN_offering"] = row["Ponneri"]
+                    metadata["BN_offering"] = row["Bharath Nagar"]
+                    metadata["MN_offering"] = row["Mannurpet"]
+                    metadata["PN_offering"] = row["Ponneri"]
 
-                break
+                    break
 
+            except:
+                continue
     except Exception as e:
         print("❌ Offering fetch failed:", e)
 
@@ -206,21 +211,31 @@ def get_weekly_metadata():
         rows = worksheet.get_all_records()
 
         for row in rows:
-            row_week = str(row["Weeks"]).replace("Week", "").strip()
-            
-            if int(row_week) == week_number:
-
-                metadata["BN_SundayS"] = clean_names(
-                    row["BN_SundayS"]
-                )
-                metadata["MN_SundayS"] = clean_names(
-                    row["MN_SundayS"]
-                )
-                metadata["PN_SundayS"] = clean_names(
-                    row["PN_SundayS"]
+            try:
+                row_week = int(
+                    str(row["Weeks"])
+                    .replace("Week", "")
+                    .strip()
                 )
 
-                break
+                if row_week == week_number:
+
+                    metadata["BN_SundayS"] = clean_names(
+                        row["BN_SundayS"]
+                    )
+
+                    metadata["MN_SundayS"] = clean_names(
+                        row["MN_SundayS"]
+                    )
+
+                    metadata["PN_SundayS"] = clean_names(
+                        row["PN_SundayS"]
+                    )
+
+                    break
+
+            except:
+                continue
 
     except Exception as e:
         print("❌ Sunday School fetch failed:", e)
@@ -358,7 +373,7 @@ async def update_slides(request: Request):
         ).execute()
 
         # Mark songs as done in Google Sheets
-        if sno_list:
+        if False:
             try:
                 print(f"📝 Marking {len(sno_list)} songs as done: {sno_list}")
                 worksheet = get_sheet()
