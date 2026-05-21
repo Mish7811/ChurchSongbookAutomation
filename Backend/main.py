@@ -281,11 +281,16 @@ async def get_songs(slot: str):
 
 @app.post("/update-slides")
 async def update_slides(request: Request):
+
+    print("🔥 UPDATE-SLIDES HIT")
+    
     """
     Update Google Slides for a specific slot and mark songs as done
     """
     try:
         data = await request.json()
+        print("🔥 PAYLOAD RECEIVED")
+        print(data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
 
@@ -301,8 +306,11 @@ async def update_slides(request: Request):
     songs = data.get('songs', [])
     sno_list = [str(song['sno']) for song in songs if 'sno' in song]
 
+    print("🔥 BUILDING REPLACEMENT MAP")
     # Build replacement map
     replacement_map = build_replacement_map(data)
+    print("🔥 REPLACEMENT MAP BUILT")
+    print(replacement_map.keys())
 
     # Fetch current presentation
     presentation = slides_service.presentations().get(
