@@ -142,7 +142,7 @@ def get_sundays_sheet():
     
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
-    replacement_map = get_weekly_metadata()
+    replacement_map = {}
 
     # Songs
     songs = data.get('songs', [])
