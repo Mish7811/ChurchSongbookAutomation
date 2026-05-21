@@ -6,6 +6,7 @@ import gspread
 import os
 import json
 from dotenv import load_dotenv
+from datetime import datetime
 
 # Load environment variables from .env file
 load_dotenv()
@@ -72,6 +73,16 @@ COLUMNS = {
     "STATUS": 4
 }
 
+def get_week_suffix(n):
+    if 11 <= (n % 100) <= 13:
+        return "th"
+
+    return {
+        1: "st",
+        2: "nd",
+        3: "rd"
+    }.get(n % 10, "th")
+
 # ----------------- HELPER FUNCTIONS -----------------
 def get_sheet():
     """Get the Google Sheet"""
@@ -102,11 +113,7 @@ def get_sheet():
 
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
-    weekly_keys = [
-        'week_number', 'week_suffix', 'BN_offering',
-        'MN_offering', 'PN_offering', 'BN_SundayS', 'MN_SundayS', 'PN_SundayS'
-    ]
-    replacement_map = {k: str(data.get(k, '')) for k in weekly_keys}
+    replacement_map = get_weekly_metadata()
 
     # Songs
     songs = data.get('songs', [])
@@ -116,6 +123,27 @@ def build_replacement_map(data: dict):
         replacement_map[f"{song_key}_eng"] = song.get('eng', '')
 
     return replacement_map
+
+def get_weekly_metadata():
+    """
+    Temporary metadata provider.
+    Later this can come from Google Sheets.
+    """
+
+    week_number = datetime.now().isocalendar().week
+
+    return {
+        "week_number": week_number,
+        "week_suffix": get_week_suffix(week_number),
+
+        "BN_offering": "",
+        "MN_offering": "",
+        "PN_offering": "",
+
+        "BN_SundayS": "",
+        "MN_SundayS": "",
+        "PN_SundayS": "",
+    }
 
 # ----------------- ENDPOINTS -----------------
 @app.get("/api/songs")
