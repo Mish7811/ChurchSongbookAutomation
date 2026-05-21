@@ -7,6 +7,7 @@ import os
 import json
 from dotenv import load_dotenv
 from datetime import datetime
+import re
 
 # Load environment variables from .env file
 load_dotenv()
@@ -152,6 +153,16 @@ def build_replacement_map(data: dict):
 
     return replacement_map
 
+def clean_names(text):
+    lines = text.splitlines()
+
+    cleaned = [
+        re.sub(r"\s*\(.*?\)", "", line).strip()
+        for line in lines
+    ]
+
+    return "\n".join(cleaned)
+
 def get_weekly_metadata():
     week_number = datetime.now().isocalendar().week
 
@@ -195,11 +206,19 @@ def get_weekly_metadata():
         rows = worksheet.get_all_records()
 
         for row in rows:
-            if int(row["Week"]) == week_number:
+            row_week = str(row["Weeks"]).replace("Week", "").strip()
+            
+            if int(row_week) == week_number:
 
-                metadata["BN_SundayS"] = row["BN_SundayS"]
-                metadata["MN_SundayS"] = row["MN_SundayS"]
-                metadata["PN_SundayS"] = row["PN_SundayS"]
+                metadata["BN_SundayS"] = clean_names(
+                    row["BN_SundayS"]
+                )
+                metadata["MN_SundayS"] = clean_names(
+                    row["MN_SundayS"]
+                )
+                metadata["PN_SundayS"] = clean_names(
+                    row["PN_SundayS"]
+                )
 
                 break
 
