@@ -5,6 +5,7 @@ from google.oauth2 import service_account
 import gspread
 import os
 import json
+from datetime import datetime, timedelta
 from dotenv import load_dotenv
 
 # Load environment variables from .env file
@@ -73,6 +74,40 @@ COLUMNS = {
 }
 
 # ----------------- HELPER FUNCTIONS -----------------
+def get_week_info():
+    today = datetime.today()
+
+    # Find this week's Sunday
+    days_until_sunday = 6 - today.weekday()
+    current_sunday = today + timedelta(days=days_until_sunday)
+
+    # First day of year
+    start_of_year = datetime(current_sunday.year, 1, 1)
+
+    # First Sunday of year
+    days_until_first_sunday = (6 - start_of_year.weekday()) % 7
+    first_sunday = start_of_year + timedelta(days=days_until_first_sunday)
+
+    # Calculate week number
+    week_number = (
+        (current_sunday - first_sunday).days // 7
+    ) + 1
+
+    # Suffix logic
+    if 11 <= week_number % 100 <= 13:
+        suffix = "th"
+    else:
+        suffix = {
+            1: "st",
+            2: "nd",
+            3: "rd"
+        }.get(week_number % 10, "th")
+
+    return {
+        "week_number": str(week_number),
+        "week_suffix": suffix
+    }
+
 def get_sheet():
     """Get the Google Sheet"""
     try:
@@ -103,8 +138,12 @@ def get_sheet():
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
     weekly_keys = [
-        'week_number', 'week_suffix', 'BN_offering',
-        'MN_offering', 'PN_offering', 'BN_SundayS', 'MN_SundayS', 'PN_SundayS'
+        'BN_offering',
+        'MN_offering', 
+        'PN_offering', 
+        'BN_SundayS', 
+        'MN_SundayS', 
+        'PN_SundayS'
     ]
     replacement_map = {k: str(data.get(k, '')) for k in weekly_keys}
 
@@ -192,6 +231,9 @@ async def update_slides(request: Request):
 
     # Build replacement map
     replacement_map = build_replacement_map(data)
+    week_info = get_week_info()
+
+    replacement_map.update(week_info)
 
     # Fetch current presentation
     presentation = slides_service.presentations().get(
