@@ -6,8 +6,6 @@ import gspread
 import os
 import json
 from dotenv import load_dotenv
-from datetime import datetime
-import re
 
 # Load environment variables from .env file
 load_dotenv()
@@ -40,15 +38,6 @@ SLOT_SLIDES_MAP = {
 # Google Sheets configuration
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 SHEET_NAME = os.environ.get("SHEET_NAME", "Feb")  # Default to "Feb"
-OFFERING_SHEET_NAME = os.environ.get(
-    "OFFERING_SHEET_NAME",
-    "Offerings"
-)
-
-SUNDAYS_SHEET_NAME = os.environ.get(
-    "SUNDAYS_SHEET_NAME",
-    "SundaySchool"
-)
 BATCH_SIZE = 15
 
 # Validate configuration
@@ -83,16 +72,6 @@ COLUMNS = {
     "STATUS": 4
 }
 
-def get_week_suffix(n):
-    if 11 <= (n % 100) <= 13:
-        return "th"
-
-    return {
-        1: "st",
-        2: "nd",
-        3: "rd"
-    }.get(n % 10, "th")
-
 # ----------------- HELPER FUNCTIONS -----------------
 def get_sheet():
     """Get the Google Sheet"""
@@ -121,31 +100,13 @@ def get_sheet():
         print(f"❌ Unexpected error: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to access Google Sheet: {type(e).__name__}: {str(e)}")
 
-def get_offering_sheet():
-    spreadsheet = sheets_client.open_by_key(
-        SPREADSHEET_ID
-    )
-
-    return spreadsheet.worksheet(
-        OFFERING_SHEET_NAME
-    )
-
-
-def get_sundays_sheet():
-    spreadsheet = sheets_client.open_by_key(
-        SPREADSHEET_ID
-    )
-
-    return spreadsheet.worksheet(
-        SUNDAYS_SHEET_NAME
-    )
-    
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
-    replacement_map = {
-        "week_number": 21,
-        "week_suffix": "st"
-    }
+    weekly_keys = [
+        'week_number', 'week_suffix', 'BN_offering',
+        'MN_offering', 'PN_offering', 'BN_SundayS', 'MN_SundayS', 'PN_SundayS'
+    ]
+    replacement_map = {k: str(data.get(k, '')) for k in weekly_keys}
 
     # Songs
     songs = data.get('songs', [])
@@ -155,96 +116,6 @@ def build_replacement_map(data: dict):
         replacement_map[f"{song_key}_eng"] = song.get('eng', '')
 
     return replacement_map
-
-def clean_names(text):
-    lines = text.splitlines()
-
-    cleaned = [
-        re.sub(r"\s*\(.*?\)", "", line).strip()
-        for line in lines
-    ]
-
-    return "\n".join(cleaned)
-
-def get_weekly_metadata():
-    week_number = datetime.now().isocalendar().week
-
-    metadata = {
-        "week_number": week_number,
-        "week_suffix": get_week_suffix(week_number),
-
-        "BN_offering": "",
-        "MN_offering": "",
-        "PN_offering": "",
-
-        "BN_SundayS": "",
-        "MN_SundayS": "",
-        "PN_SundayS": "",
-    }
-
-    # ---------------- OFFERINGS ----------------
-
-    try:
-        worksheet = get_offering_sheet()
-
-        rows = worksheet.get_all_records()
-
-        for row in rows:
-            try:
-                row_week = int(str(row["Week"]).strip())
-            
-                if row_week == week_number:
-
-                    metadata["BN_offering"] = row["Bharath Nagar"]
-                    metadata["MN_offering"] = row["Mannurpet"]
-                    metadata["PN_offering"] = row["Ponneri"]
-
-                    break
-
-            except:
-                continue
-    except Exception as e:
-        print("❌ Offering fetch failed:", e)
-
-    # ---------------- SUNDAY SCHOOL ----------------
-
-    try:
-        worksheet = get_sundays_sheet()
-
-        rows = worksheet.get_all_records()
-
-        for row in rows:
-            try:
-                row_week = int(
-                    str(row["Weeks"])
-                    .replace("Week", "")
-                    .strip()
-                )
-
-                if row_week == week_number:
-
-                    metadata["BN_SundayS"] = clean_names(
-                        row["BN_SundayS"]
-                    )
-
-                    metadata["MN_SundayS"] = clean_names(
-                        row["MN_SundayS"]
-                    )
-
-                    metadata["PN_SundayS"] = clean_names(
-                        row["PN_SundayS"]
-                    )
-
-                    break
-
-            except:
-                continue
-
-    except Exception as e:
-        print("❌ Sunday School fetch failed:", e)
-
-    return metadata
-
 
 # ----------------- ENDPOINTS -----------------
 @app.get("/api/songs")
@@ -299,16 +170,11 @@ async def get_songs(slot: str):
 
 @app.post("/update-slides")
 async def update_slides(request: Request):
-
-    print("🔥 UPDATE-SLIDES HIT")
-    
     """
     Update Google Slides for a specific slot and mark songs as done
     """
     try:
         data = await request.json()
-        print("🔥 PAYLOAD RECEIVED")
-        print(data)
     except Exception as e:
         raise HTTPException(status_code=400, detail=f"Invalid JSON: {e}")
 
@@ -324,11 +190,8 @@ async def update_slides(request: Request):
     songs = data.get('songs', [])
     sno_list = [str(song['sno']) for song in songs if 'sno' in song]
 
-    print("🔥 BUILDING REPLACEMENT MAP")
     # Build replacement map
     replacement_map = build_replacement_map(data)
-    print("🔥 REPLACEMENT MAP BUILT")
-    print(replacement_map.keys())
 
     # Fetch current presentation
     presentation = slides_service.presentations().get(
@@ -376,7 +239,7 @@ async def update_slides(request: Request):
         ).execute()
 
         # Mark songs as done in Google Sheets
-        if False:
+        if sno_list:
             try:
                 print(f"📝 Marking {len(sno_list)} songs as done: {sno_list}")
                 worksheet = get_sheet()
