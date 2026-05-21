@@ -39,6 +39,15 @@ SLOT_SLIDES_MAP = {
 # Google Sheets configuration
 SPREADSHEET_ID = os.environ.get("SPREADSHEET_ID")
 SHEET_NAME = os.environ.get("SHEET_NAME", "Feb")  # Default to "Feb"
+OFFERING_SHEET_NAME = os.environ.get(
+    "OFFERING_SHEET_NAME",
+    "Offerings"
+)
+
+SUNDAYS_SHEET_NAME = os.environ.get(
+    "SUNDAYS_SHEET_NAME",
+    "SundaySchool"
+)
 BATCH_SIZE = 15
 
 # Validate configuration
@@ -111,6 +120,25 @@ def get_sheet():
         print(f"❌ Unexpected error: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to access Google Sheet: {type(e).__name__}: {str(e)}")
 
+def get_offering_sheet():
+    spreadsheet = sheets_client.open_by_key(
+        SPREADSHEET_ID
+    )
+
+    return spreadsheet.worksheet(
+        OFFERING_SHEET_NAME
+    )
+
+
+def get_sundays_sheet():
+    spreadsheet = sheets_client.open_by_key(
+        SPREADSHEET_ID
+    )
+
+    return spreadsheet.worksheet(
+        SUNDAYS_SHEET_NAME
+    )
+    
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
     replacement_map = get_weekly_metadata()
@@ -125,14 +153,9 @@ def build_replacement_map(data: dict):
     return replacement_map
 
 def get_weekly_metadata():
-    """
-    Temporary metadata provider.
-    Later this can come from Google Sheets.
-    """
-
     week_number = datetime.now().isocalendar().week
 
-    return {
+    metadata = {
         "week_number": week_number,
         "week_suffix": get_week_suffix(week_number),
 
@@ -144,6 +167,47 @@ def get_weekly_metadata():
         "MN_SundayS": "",
         "PN_SundayS": "",
     }
+
+    # ---------------- OFFERINGS ----------------
+
+    try:
+        worksheet = get_offering_sheet()
+
+        rows = worksheet.get_all_records()
+
+        for row in rows:
+            if int(row["Week"]) == week_number:
+
+                metadata["BN_offering"] = row["Bharath Nagar"]
+                metadata["MN_offering"] = row["Mannurpet"]
+                metadata["PN_offering"] = row["Ponneri"]
+
+                break
+
+    except Exception as e:
+        print("❌ Offering fetch failed:", e)
+
+    # ---------------- SUNDAY SCHOOL ----------------
+
+    try:
+        worksheet = get_sundays_sheet()
+
+        rows = worksheet.get_all_records()
+
+        for row in rows:
+            if int(row["Week"]) == week_number:
+
+                metadata["BN_SundayS"] = row["BN_SundayS"]
+                metadata["MN_SundayS"] = row["MN_SundayS"]
+                metadata["PN_SundayS"] = row["PN_SundayS"]
+
+                break
+
+    except Exception as e:
+        print("❌ Sunday School fetch failed:", e)
+
+    return metadata
+
 
 # ----------------- ENDPOINTS -----------------
 @app.get("/api/songs")
