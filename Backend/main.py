@@ -179,9 +179,9 @@ def get_sunday_school(week_number):
             if str(row["Weeks"]) == str(week_number):
 
                 return {
-                    "BN_SundayS": row["BN_SundayS"],
-                    "MN_SundayS": row["MN_SundayS"],
-                    "PN_SundayS": row["PN_SundayS"]
+                    "BN_SundayS": format_names(row["BN_SundayS"]),
+                    "MN_SundayS": format_names(row["MN_SundayS"]),
+                    "PN_SundayS": format_names(row["PN_SundayS"])
                 }
 
         return {
@@ -198,6 +198,24 @@ def get_sunday_school(week_number):
             "MN_SundayS": "Sunday School Missing",
             "PN_SundayS": "Sunday School Missing"
         }
+
+def format_names(text):
+    names = [
+        line.strip()
+        for line in text.splitlines()
+        if line.strip()
+    ]
+
+    if len(names) == 0:
+        return "Sunday School Missing"
+
+    if len(names) == 1:
+        return names[0]
+
+    if len(names) == 2:
+        return f"{names[0]} & {names[1]}"
+
+    return ", ".join(names[:-1]) + f" & {names[-1]}"
 
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
