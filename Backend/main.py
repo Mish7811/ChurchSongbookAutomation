@@ -167,22 +167,47 @@ def get_offerings(week_number):
             "PN_offering": "Offering Missing"
         }
 
+def get_sunday_school(week_number):
+    try:
+        spreadsheet = sheets_client.open_by_key(SPREADSHEET_ID)
+
+        worksheet = spreadsheet.worksheet("SundaySchool")
+
+        rows = worksheet.get_all_records()
+
+        for row in rows:
+            if str(row["Weeks"]) == str(week_number):
+
+                return {
+                    "BN_SundayS": row["BN_SundayS"],
+                    "MN_SundayS": row["MN_SundayS"],
+                    "PN_SundayS": row["PN_SundayS"]
+                }
+
+        return {
+            "BN_SundayS": "Sunday School Missing",
+            "MN_SundayS": "Sunday School Missing",
+            "PN_SundayS": "Sunday School Missing"
+        }
+
+    except Exception as e:
+        print(f"❌ Failed to fetch Sunday School: {e}")
+
+        return {
+            "BN_SundayS": "Sunday School Missing",
+            "MN_SundayS": "Sunday School Missing",
+            "PN_SundayS": "Sunday School Missing"
+        }
+
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
-    weekly_keys = [
-        'BN_offering',
-        'MN_offering', 
-        'PN_offering', 
-        'BN_SundayS', 
-        'MN_SundayS', 
-        'PN_SundayS'
-    ]
-    replacement_map = {k: str(data.get(k, '')) for k in weekly_keys}
+    replacement_map = {}
 
     # Songs
     songs = data.get('songs', [])
     for idx, song in enumerate(songs):
         song_key = f"song_{idx + 1}"
+        
         replacement_map[song_key] = song.get('main', '')
         replacement_map[f"{song_key}_eng"] = song.get('eng', '')
 
@@ -272,6 +297,12 @@ async def update_slides(request: Request):
     )
 
     replacement_map.update(offerings)
+
+    sunday_school = get_sunday_school(
+        week_info["week_number"]
+    )
+
+    replacement_map.update(sunday_school)
 
     # Fetch current presentation
     presentation = slides_service.presentations().get(
