@@ -135,6 +135,38 @@ def get_sheet():
         print(f"❌ Unexpected error: {type(e).__name__}: {e}")
         raise HTTPException(status_code=500, detail=f"Failed to access Google Sheet: {type(e).__name__}: {str(e)}")
 
+def get_offerings(week_number):
+    try:
+        spreadsheet = sheets_client.open_by_key(SPREADSHEET_ID)
+
+        worksheet = spreadsheet.worksheet("Offerings")
+
+        rows = worksheet.get_all_records()
+
+        for row in rows:
+            if str(row["Week"]) == str(week_number):
+
+                return {
+                    "BN_offering": f'{row["BN"]} & Family',
+                    "MN_offering": f'{row["MN"]} & Family',
+                    "PN_offering": f'{row["PN"]} & Family'
+                }
+
+        return {
+            "BN_offering": "Offering Missing",
+            "MN_offering": "Offering Missing",
+            "PN_offering": "Offering Missing"
+        }
+
+    except Exception as e:
+        print(f"❌ Failed to fetch offerings: {e}")
+
+        return {
+            "BN_offering": "Offering Missing",
+            "MN_offering": "Offering Missing",
+            "PN_offering": "Offering Missing"
+        }
+
 def build_replacement_map(data: dict):
     """Converts incoming JSON to a flat replacement map"""
     weekly_keys = [
@@ -234,6 +266,12 @@ async def update_slides(request: Request):
     week_info = get_week_info()
 
     replacement_map.update(week_info)
+
+    offerings = get_offerings(
+        week_info["week_number"]
+    )
+
+    replacement_map.update(offerings)
 
     # Fetch current presentation
     presentation = slides_service.presentations().get(
