@@ -1,0 +1,199 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta name="viewport" content="width=device-width, initial-scale=1" />
+<title>AI Extracted Songbook</title>
+<link href="https://fonts.googleapis.com/css2?family=Lugrasimo&display=swap" rel="stylesheet">
+
+<style>
+body { margin:0; font-family:Arial; background:#111; color:white; }
+.pageTitle {
+  text-align:center; font-size:22px; font-weight:bold;
+  padding:14px 10px 6px 10px; background:#111; position:sticky;
+  top:0; z-index:5000; color:#ffcc00; letter-spacing:.5px; font-family:'Lugrasimo', serif;
+}
+.subHeading {
+  text-align:center; font-size:16px; font-weight:bold;
+  padding:0px 10px 6px 10px; background:#111; position:sticky;
+  top:0; z-index:5000; color:#fdeaa1; letter-spacing:5px; font-family:'Lugrasimo', serif;
+}
+.searchWrap { padding:10px; position:sticky; top:52px; background:#111; z-index:4000; }
+#searchBox { width:100%; padding:14px; font-size:16px; border-radius:8px; border:none; outline:none; margin-bottom:8px; box-sizing: border-box; }
+.langFilter { display:flex; gap:8px; }
+.langBtn { flex:1; padding:10px; background:#1c1c1c; border-radius:8px; text-align:center; cursor:pointer; }
+.langBtn.active { color:white; font-weight:bold; outline:2px solid #ffcc00; outline-offset:0px; }
+.container { padding:10px; }
+.song { border-bottom:1px solid #333; }
+.song-header { padding:18px; font-size:20px; font-weight:bold; background:#1c1c1c; cursor:pointer; }
+.song.open .song-header { background:#333; }
+.song-content { display:none; white-space:pre-wrap; line-height:1.6; padding:18px; }
+.song.open .song-content { display:block; }
+.title { font-size:22px; margin-bottom:12px; color:#ffcc00; }
+.eng { margin-top:20px; opacity:0.85; }
+.float-btn { position:fixed; bottom:20px; right:20px; background:#ffcc00; color:black; padding:14px 18px; border-radius:50px; font-weight:bold; cursor:pointer; z-index:3000; }
+#fastScroll { position:fixed; right:10px; top:140px; bottom:80px; width:40px; display:flex; align-items:center; justify-content:center; z-index:9999; }
+#scrollTrack { width:6px; height:100%; background:#333; border-radius:10px; position:relative; }
+#scrollThumb { position:absolute; left:-10px; top:0; width:30px; height:30px; background:#ffcc00; border-radius:50%; display:flex; align-items:center; justify-content:center; color:black; font-weight:bold; }
+</style>
+</head>
+
+<body>
+
+<div class="pageTitle">Extracted Songbook</div>
+<div class="subHeading">597 Songs</div>
+
+<div class="searchWrap">
+  <input id="searchBox" placeholder="Search song title..." />
+  <div class="langFilter">
+    <div class="langBtn active" data-lang="all">All</div>
+    <div class="langBtn" data-lang="tamil">Tamil</div>
+    <div class="langBtn" data-lang="telugu">Telugu</div>
+  </div>
+</div>
+
+<div class="container" id="songs"></div>
+
+<div class="float-btn" onclick="window.scrollTo({top:0,behavior:'smooth'})">⬆ Songs</div>
+
+<div id="fastScroll">
+  <div id="scrollTrack">
+    <div id="scrollThumb">1</div>
+  </div>
+</div>
+
+<script>
+let currentLang = "all";
+
+// Fetch the local JSON file directly
+fetch('songs.json')
+  .then(r => r.json())
+  .then(data => {
+    const container = document.getElementById("songs");
+    const searchBox = document.getElementById("searchBox");
+    let songElements = [];
+
+    data.forEach(songData => {
+      const sno = songData.id;
+      const title = (songData.title || "").trim();
+      const nativeLyrics = songData.lyrics_native || "";
+      const engLyrics = songData.lyrics_english || "";
+      const lang = (songData.language || "unknown").toLowerCase();
+
+      if (!title || title === "." || title === "-") return;
+
+      const song = document.createElement("div");
+      song.className = "song";
+      song.dataset.title = title.toLowerCase();
+      song.dataset.lang = lang;
+
+      song.innerHTML = `
+        <div class="song-header">${sno}. ${title}</div>
+        <div class="song-content">
+          <div class="title">${title}</div>
+          ${nativeLyrics}
+          <div class="eng">
+          -------------------------
+          ${engLyrics}
+          </div>
+        </div>
+      `;
+
+      song.querySelector(".song-header").onclick = () => {
+        const wasFiltered = searchBox.value.trim().length > 0;
+        
+        if(song.classList.contains("open")){
+          song.classList.remove("open");
+          return;
+        }
+
+        document.querySelectorAll(".song").forEach(s => s.classList.remove("open"));
+        song.classList.add("open");
+
+        if(wasFiltered){
+          searchBox.value = "";
+          applyFilters();
+          setTimeout(() => {
+            song.scrollIntoView({behavior:"smooth",block:"start"});
+          }, 60);
+        } else {
+          song.scrollIntoView({behavior:"smooth",block:"start"});
+        }
+      };
+
+      container.appendChild(song);
+      songElements.push(song);
+    });
+
+    /* FILTER LOGIC */
+    function applyFilters() {
+      const searchValue = searchBox.value.toLowerCase().trim();
+      songElements.forEach(song => {
+        const matchTitle = song.dataset.title.includes(searchValue);
+        const matchLang = currentLang === "all" || song.dataset.lang === currentLang;
+        song.style.display = (matchTitle && matchLang) ? "block" : "none";
+      });
+    }
+
+    searchBox.addEventListener("input", applyFilters);
+
+    /* LANGUAGE BUTTONS */
+    document.querySelectorAll(".langBtn").forEach(btn => {
+      btn.onclick = () => {
+        document.querySelectorAll(".langBtn").forEach(b => b.classList.remove("active"));
+        btn.classList.add("active");
+        currentLang = btn.dataset.lang;
+        applyFilters();
+      };
+    });
+
+    /* FAST SCROLL */
+    const thumb = document.getElementById("scrollThumb");
+    const track = document.getElementById("scrollTrack");
+    const songsList = document.querySelectorAll(".song");
+    let dragging = false;
+
+    thumb.addEventListener("touchstart", (e) => {
+      dragging = true;
+      document.body.style.overflow = "hidden";
+      e.preventDefault();
+    }, {passive:false});
+
+    document.addEventListener("touchend", () => {
+      dragging = false;
+      document.body.style.overflow = "";
+    });
+
+    document.addEventListener("touchmove", (e) => {
+      if(!dragging) return;
+      e.preventDefault();
+      const rect = track.getBoundingClientRect();
+      let y = e.touches[0].clientY - rect.top;
+      if(y < 0) y = 0;
+      if(y > rect.height) y = rect.height;
+      
+      thumb.style.top = (y - 15) + "px";
+      const percent = y / rect.height;
+      const maxScroll = document.getElementById("songs").scrollHeight - window.innerHeight;
+      window.scrollTo(0, percent * maxScroll);
+      
+      const index = Math.floor(percent * songsList.length);
+      thumb.innerText = index + 1;
+    }, {passive:false});
+
+    window.addEventListener("scroll", () => {
+      if(dragging) return;
+      const maxScroll = document.documentElement.scrollHeight - window.innerHeight;
+      if (maxScroll <= 0) return; // Prevent NaN if page is short
+      
+      const percent = window.scrollY / maxScroll;
+      const rect = track.getBoundingClientRect();
+      thumb.style.top = (percent * rect.height - 15) + "px";
+      const index = Math.floor(percent * songsList.length);
+      thumb.innerText = index + 1;
+    });
+
+  })
+  .catch(err => console.error("Error loading JSON:", err));
+</script>
+</body>
+</html>
